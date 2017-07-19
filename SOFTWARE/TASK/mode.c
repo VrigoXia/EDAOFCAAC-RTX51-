@@ -94,7 +94,98 @@ void mode1(void)
 
 void mode2(void)
 {
-	
+	 static unsigned int mode2_ERR_times = 0;//误差次数计算
+			 static bit mode2_step1 = 0;//步骤1标识位
+			 static bit mode2_step2 = 0;//步骤2标识位
+			 static bit mode2_step3 = 0;//步骤3标识位
+			 static unsigned int mode2_time = 0;//模式执行次数
+			 static float mode2_Sta_angle = 0.0;//误差值计算
+	while(1)
+	{
+			 setTimeout(Timer1,10);//设定定时器
+////////////////////步骤1范围///////////////////////////
+			 if(mode2_step1)//判断步骤1是否完成
+			 {
+////////////////////步骤2范围///////////////////////////
+				 if(mode2_step2)//判断步骤2是否完成
+				 {
+////////////////////步骤3范围///////////////////////////
+					 if(mode2_step3)//判断步骤3是否完成
+					 {
+						 
+					 }
+					 else
+					 {
+						 mode2_time++;//模式2执行次数累计
+						 if(mode2_time == 3)//当模式2运行3次后风机停止工作
+						 {
+							  setDC_MotorSpeed(LEFT_MOTOR,0.01f);
+                setDC_MotorSpeed(RIGHT_MOTOR,0.99f);
+                close_DC_Motor(RIGHT_MOTOR);
+								close_DC_Motor(LEFT_MOTOR);
+							 break;
+						 }
+					 }
+////////////////////步骤3///////////////////////////
+				 }
+				 else
+				 {
+					 PID_setTargetParameter(PID_1,110.0f);//设定要到达的第二个角度
+					 open_DC_Motor(LEFT_MOTOR);//电机开始工作
+					 open_DC_Motor(RIGHT_MOTOR);//电机开始工作
+					 if(PID_getErr(PID_1) < 2.0f)//判断是否进入误差计算
+					 {
+						 if(isExpiredTimer(Timer1))//判断是否到达定时器时间
+						 {
+							 mode2_ERR_times++;//误差次数累计
+							 mode2_Sta_angle += abs(PID_getErr(PID_1));//误差累计
+							 if(mode2_ERR_times >= 50)//误差累计次数是否到达50次
+							 {
+								 mode2_Sta_angle /= mode2_ERR_times;//计算平均误差
+								 mode2_ERR_times = 0;//误差累计计数器初始化
+								 if(abs(mode2_ERR_times) < 5)//判断是否到达稳定
+								 {
+									 mode2_step2 = 1;//进入步骤3
+								 }
+							 }
+						 }
+						 else
+						 {
+							 restartTimer(Timer1);
+						 }
+					 }
+				 }
+////////////////////////步骤2//////////////////////////
+			 }
+			 else
+			 {
+				 PID_setTargetParameter(PID_1,70.0f);//设定要达到的第一个角度
+				 open_DC_Motor(LEFT_MOTOR);//电机开始工作
+				 open_DC_Motor(RIGHT_MOTOR);//电机开始工作
+				 if(PID_getErr(PID_1) < 2.0f)//判断是否开始进行误差计算
+				 {
+					 if(isExpiredTimer(Timer1))//判断定时器是否到达指定时间
+					 {
+						 mode2_ERR_times++;
+						 mode2_Sta_angle += abs(PID_getErr(PID_1));//误差累计
+						 if(mode2_ERR_times >= 50)//是否记录了50次误差
+						 {
+							 mode2_Sta_angle /= mode2_ERR_times;//取误差平均值
+							 mode2_ERR_times = 0;//重置误差计数器
+							 if(abs(mode2_ERR_times) < 5)//判断是否到达稳定状态，是则进入步骤2
+							 {
+								 mode2_step1 = 1;
+							 }
+						 }
+					 }
+					 else
+					 {
+						 restartTimer(Timer1);//启动定时器
+					 }
+				 }
+			 }
+////////////////////////步骤1/////////////////////////////			 
+		 }
 }
 
 
