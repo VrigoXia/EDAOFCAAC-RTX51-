@@ -12,6 +12,7 @@
 #include "../../HARDWARE/BSP/STC15_PWM.H"
 #include "../SOFTWARE/ALGORITHM/PID/PID.H"
 #include "../../HARDWARE/DEVICES/MOTOR/DC_MOTOR/MOTOR.h"
+#include "../TASK/MODE.H"
 
 #define INIT 0//初始化
 #define BUTTON 1//按键检测
@@ -28,7 +29,7 @@
 void Task_Init() _task_ INIT
 {
 	setup();
-	os_create_task(BUTTON);
+	os_create_task(DEBUG);
 	os_delete_task(INIT);
 }
 
@@ -82,7 +83,8 @@ void Task_Mode_1() _task_ MODE_1
 
 void Task_Mode_2() _task_ MODE_2
 {
-	
+	mode2();
+	os_delete_task(MODE_2);
 }
 void Debug()  _task_   DEBUG
 {   for(;;)
